@@ -8,7 +8,6 @@ const  connectDatabase  = require("./connection/db");
 const generatetoken = require("./tokens/generate");
 const verifytoken = require("./tokens/verify");
 const USER_MODEL = require("./model/user");
-const user = require("./model/user");
 const { sendLoginOtp, verifyOtp } = require("./function/otp");
 const { encrytPassword, verifyPassword } = require("./function/encryption");
 
@@ -43,25 +42,6 @@ app.post("/signup" , async(req, res)=>{
         return res.status(400).json({ success: false, error: error.message });
       }
     });
-        // await newuser.save();
-        // const token = generatetoken(userEMAIL)
-        // res.cookie("auth_tok", token)
-        // const checkuser = await USER_MODEL.findOne({
-        // userEMAIL: req.body.userEMAIL.toLowerCase(),
-        // })
-        // if(!checkuser){
-        //     await newuser.save();
-        //     return res.json({ success: true, message: "Signed Up successfuly"});
-        // }else{
-        //     return res.json({ success: false , error: "User already registered"})
-        // }
-        // return res.json ({ success: true , message: "Signed up success and token is generated"})
-        
-//     } catch (error) {
-//         console.log(error);
-//         return res.status(400).json({ success: false , error : error.message})
-//     }
-// })
 
 
 app.post("/login" , async(req, res)=>{
@@ -90,15 +70,6 @@ app.post("/login" , async(req, res)=>{
         return res.json(400).json({ success: false , error : error.message})
     }
 })
-// const checkloggedinuser = (req, res, next)=>{
-//     if(verifytoken(req.cookies.auth_tok)){
-//     const userinfo = verifytoken(req.cookies.auth_tok)
-//     req.userid = userinfo.id;
-//     next();
-// }else{
-//     return res.status(401).json({ success: false, error: "UNAUTHORIZED"})
-// }
-// }
 
 app.post("/mfaverify", async (req, res) => {
     try {
@@ -130,9 +101,34 @@ app.post("/mfaverify", async (req, res) => {
       return res.status(400).json({ success: false, error: error.message });
     }
   });
+  app.get("/Privatetuser", checkloggedinuser, async (req, res) => {
+    try {
+      const userEMAIL = req.userid;
+      const userdetails = await USER_MODEL.findOne(
+        { _id: userEMAIL },
+        { userEMAIL: 1, userNAME: 1, userDOB: 1, userPHONENUMBER: 1, userOCCUPATION: 1, createdAt: 1 }
+      );
+      if (userdetails) {
+        return res.json({ success: true, data: userdetails });
+      } else {
+        return res.status(400).json({ success: false, error: "User not found" });
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(400).json({ success: false, error: error.message });
+    }
+  });
 
-
+  app.get("/logout", (req, res) => {
+    try {
+      res.clearCookie("auth_tk");
+      return res.json({ success: true });
+    } catch (error) {
+      console.log(error);
+      return res.status(400).json({ success: false, error: error.message });
+    }
+  });
 connectDatabase();
-app.listen(5000, () => {
-    console.log("Server is running on port 5000");
+app.listen(9000, () => {
+    console.log("Server is running on port 9000");
   });
